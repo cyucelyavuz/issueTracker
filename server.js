@@ -9,6 +9,18 @@ require('dotenv').config();
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
+const mongoose= require(mongoose);
+
+const issueSchema = new mongoose.Schema({
+  issue_title: String,
+  issue_text: String,
+  created_on: Date,
+  updated_on: Date,
+  created_by: String,
+  assigned_to: String,
+  open: Boolean,
+  status_text: String
+});
 
 let app = express();
 
@@ -16,7 +28,11 @@ app.use('/public', express.static(process.cwd() + '/public'));
 
 app.use(cors({origin: '*'})); //For FCC testing purposes only
 
+main().catch(err => console.log(err));
 
+  async function main() {
+    await mongoose.connect(process.env.MONGO_URI);
+}
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
