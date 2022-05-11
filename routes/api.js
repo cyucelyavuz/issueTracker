@@ -1,10 +1,11 @@
 'use strict';
 
 require('dotenv').config();
+const { serializeWithBufferAndIndex } = require('bson');
 const { is } = require('express/lib/request');
 const { createInvalidArgumentValueError } = require('mocha/lib/errors');
 const mongoose = require('mongoose');
-const ObjectID = require('mongodb').ObjectID;
+const ObjectId = require('mongodb').ObjectId;
 const Issue=require('./model').Issue;
 const Project=require('./model').Project;
 
@@ -25,7 +26,60 @@ module.exports = function (app) {
   
     .get(function (req, res){
       let project = req.params.project;
-      //console.log(project);
+      const {
+        _id,
+        issue_title,
+        issue_text,
+        created_by,
+        assigned_to,
+        status_text
+      } = req.query;
+      let open=req.query.open;
+
+      (open!=undefined) ?
+        (open==='true') ? open=true : open=false
+        : open=undefined;
+      
+      
+      
+      Project.aggregate([
+        {
+          $match: { name:project }
+        },
+        {
+          $unwind: '$issues'
+        },
+       _id!=undefined 
+       ? { $match:{'issues._id': ObjectId(_id)}} 
+       : { $match:{}},
+       open!=undefined
+       ? { $match:{'issues.open':open}}
+       : { $match:{}},
+       issue_title!=undefined
+       ? { $match:{'issues.issue_title':issue_title}}
+       : { $match:{}},
+       issue_text!=undefined
+       ? { $match:{'issues.issue_text':issue_text}}
+       : { $match:{}},
+       created_by!=undefined
+       ? { $match:{'issues.created_by':created_by }}
+       : { $match:{}},
+       assigned_to!=undefined
+       ? { $match:{'issues.assigned_to':assigned_to}}
+       : { $match:{}},
+       status_text!=undefined
+       ? { $match:{'issues.status_text':status_text}}
+       : { $match:{}}
+      ]).exec((err,data)=>{
+       
+        if (!data) res.json([])
+        else if (err) res.json({error:err.message})
+        else {
+          let response=data.map( elem=> elem.issues);
+          res.json(response);
+        }
+      });
+      
     })
     
     .post(function (req, res){
@@ -37,7 +91,7 @@ module.exports = function (app) {
         assigned_to,
         status_text
       }=req.body;
-
+      //console.log('create issue'+ '\n'+ req.body);
       if(!issue_title||!issue_text||!created_by){
         res.json({error:'required filed(s) missing'});
         return;
@@ -80,12 +134,83 @@ module.exports = function (app) {
     
     .put(function (req, res){
       let project = req.params.project;
-      
+      const {
+        _id,
+        issue_title,
+        issue_text,
+        created_by,
+        assigned_to,
+        status_text,
+        open,
+      }= req.body;
+
+      if(!_id){
+        res.json({error:'missing _id'});
+        return;
+      }
+      console.log('update issue\n'+req.body);
+      if(!issue_title && 
+         !issue_text &&
+         !created_by &&
+         !assigned_to &&
+         !status_text &&
+         !open) {
+           res.json({error:'no update field(s)'});
+           return;
+         }
+      Project.findOne({name:project},(err,projData)=>{
+        if (err || !projData) res.json({error:'error updating',id:_id});
+        else {
+          const issueToUpdate= projData.issues.id(_id);
+          if(!issueToUpdate) {
+            res.json({ error: 'no issue by that id'});
+            return;
+          }
+          issueToUpdate.issue_title=issue_title||issueToUpdate.issue_title;
+          issueToUpdate.issue_text=issue_text||issueToUpdate.issue_text;
+          issueToUpdate.created_by=created_by||issueToUpdate.created_by;
+          issueToUpdate.assigned_to=assigned_to||issueToUpdate.assigned_to;
+          issueToUpdate.updated_on= new Date();
+          issueToUpdate.open=open;
+          issueToUpdate.status_text=status_text;
+          projData.save((err,data)=>{
+            if (err|| !data){
+              res.json({error:'could not update issue'})
+            } else res.json(data['issues'].id(_id));
+          })
+        }
+
+      })
     })
     
     .delete(function (req, res){
       let project = req.params.project;
-      
+      if(!req.body._id) {
+        res.json({error:'no _id'});
+        return;
+      } else{
+        //console.log('delete issue\n'+req.body._id);
+        Project.findOne({name:project},(err,data)=>{
+          if(err||!data) res.json({error:'error bringing up issue'});
+          else {
+            const issueToDel = data.issues.id(req.body._id);
+            if(!issueToDel){
+              res.send({error:'could not delete issue'});
+              return;
+            }
+            issueToDel.remove();
+
+            data.save((err,data)=>{
+              if(err|!data) res.json({error:'could not delete issue'});
+
+              else {
+                console.log('deleted issue '+req.body._id);
+                res.json({result:'success on delete'});
+              }
+            })
+          }
+        })
+      }
     });
     
 };
