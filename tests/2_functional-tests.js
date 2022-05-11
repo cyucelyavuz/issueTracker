@@ -225,7 +225,7 @@ suite('Functional Tests', function() {
              if (err) console.log(err); 
             //assert.equal(res.body['result'],'success on delete');
 
-            }).timeout(20000);
+            }).timeout(200000);
       chai.request(server)
           .delete('/api/issues/apitest')
           .type('form')
@@ -237,7 +237,7 @@ suite('Functional Tests', function() {
              
              //assert.equal(res.body['result'],'success on delete');
              
-           }).timeout(20000);
+           }).timeout(200000);
       
           done();
       })
