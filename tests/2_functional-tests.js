@@ -3,12 +3,32 @@ const chai = require('chai');
 const assert = chai.assert;
 const server = require('../server');
 const { expect } = require('chai');
+const { post } = require('../server');
 
 chai.use(chaiHttp);
-let test1Id;
-let test2Id;
+
+
+
+
 suite('Functional Tests', function() {
-  suite('ap.post method',()=>{
+
+
+    suite('ap.post method',()=>{
+      let postId;
+      afterEach(done=>{
+        chai.request(server)
+            .delete('/api/issues/apitest')
+            .type('form')
+            .send({
+              _id:postId
+            })
+            .end((err,res)=>{
+              if (err) console.log(err);
+              else console.log('deletion succes post method suite afterEach');
+              done();
+            }).timeout(10000);
+      })
+
       test('Create an issue with every field', (done)=>{
 
           chai.request(server)
@@ -19,16 +39,18 @@ suite('Functional Tests', function() {
                 'issue_text':'PostTest1',
                 'created_by':'Test Suite Test#1',
                 'assigned_to':'Test Suite',
-                'status_test':'success PostTest 1'
+                'status_text':'success PostTest 1'
             })
             .end((err,res)=>{
-                test1Id=res.body._id;
+                postId=res.body._id;
                 assert.equal(res.body.assigned_to,'Test Suite');
                 assert.equal(res.body.issue_title,'PostTest');
                 done();
             }).timeout(10000);
         
       });
+
+    
 
       test('Create an issue with only required fields',(done)=>{
 
@@ -41,7 +63,7 @@ suite('Functional Tests', function() {
                 'created_by':'Test Suite Test#2'
               })
               .end((err,res)=>{
-                test2Id=res.body._id;
+                postId=res.body._id;
                 assert.equal(res.body.issue_title,'PostTest');
                 assert.equal(res.body.issue_text,'PostTest2-Only Required Fields');
                 assert.equal(res.body.created_by,'Test Suite Test#2');
@@ -51,6 +73,8 @@ suite('Functional Tests', function() {
 
 
       })
+
+    
 
       test('Create an issue with missing required fields',(done)=>{
 
@@ -68,17 +92,53 @@ suite('Functional Tests', function() {
         
       })
   })
-    suite('get issue method',()=> {  
 
+
+    suite('get issue method',()=> {  
+      let postId;
+
+      before( (done)=>{
+        chai.request(server)
+            .post('/api/issues/apitest')
+            .type('form')
+            .send({
+              'issue_title':'GetTest',
+              'issue_text':'Issue for get test',
+              'created_by':'get issue method suite before hook',
+              'assigned_to':'get issue method suite',
+              'status_text':'success'
+            })
+            .end((err,res)=>{
+              if (err) console.log(err);
+              else {
+                postId=res.body['_id'];
+                console.log('issue creation for get issue method suite '+ postId);
+            }
+              done();
+            }).timeout(10000);
+
+        after( done=>{
+          chai.request(server)
+              .delete('/api/issues/apitest')
+              .type('form')
+              .send({
+                _id:postId
+              })
+              .end((err,res)=>{
+                if (err) console.log(err);
+                else console.log('deletion GetTest after get issue method suite');
+                done();
+              })
+        })
+      });
       test('View issues on a project',(done)=>{
 
         chai.request(server)
             .get('/api/issues/apitest')
             .end((err,res)=>{
               assert.equal(typeof res.body, "object");
-              //const testIssues=res.body.filter(elem=> elem['issue_title']='PostTest');
-              //console.log(testIssues);
-              //assert.equal(testIssues.length,3);
+              const testIssue=res.body.filter(elem=> elem['_id']===postId);
+              assert.equal(testIssue[0]['issue_title'],'GetTest');
               done();
          }).timeout(10000);
          
@@ -87,9 +147,9 @@ suite('Functional Tests', function() {
       test('View issues on a project with one filter',(done)=>{
 
         chai.request(server)
-            .get('/api/issues/apitest?issue_text=PostTest2-Only%20Required%20Fields')
+            .get('/api/issues/apitest?issue_text=Issue%20for%20get%20test')
             .end((err,res)=>{
-              assert.equal(res.body[0].issue_title,'PostTest');
+              assert.equal(res.body[0]['issue_title'],'GetTest');
               done();
          }).timeout(10000);
          
@@ -98,33 +158,70 @@ suite('Functional Tests', function() {
       test('View issues on a project with multiple filter',(done)=>{
 
         chai.request(server)
-            .get('/api/issues/apitest?issue_text=PostTest2-Only%20Required%20Fields&issute_title=PostTest')
+            .get('/api/issues/apitest?issue_text=Issue%20for%20get%20test&issute_title=GetTest')
             .end((err,res)=>{
-              console.log(res.body);
-              assert.equal(res.body[0].issue_title,'PostTest');
+              assert.equal(res.body[0]['issue_title'],'GetTest');
               done();
          }).timeout(10000);
          
       })
+    });
 
     suite('app.put method',()=>{
+      let putId;
+      before( done=>{
+        chai.request(server)
+            .post('/api/issues/apitest')
+            .type('form')
+            .send({
+              'issue_title':'PutTest',
+              'issue_text':'Issue for put test',
+              'created_by':'put issue method suite before hook',
+              'assigned_to':'put issue method suite',
+              'status_text':'success'
+            })
+            .end((err,res)=>{
+              if (err) console.log(err);
+              else {
+                console.log('app.put issue creation before hook');
+                putId=res.body['_id'];
+                done();
+              }
+            })
+      });
 
+      after(done=>{
+        chai.request(server)
+            .delete('/api/issues/apitest')
+            .type('form')
+            .send({
+              _id:putId
+            })
+            .end((err,res)=>{
+              if (err) console.log(err);
+              else {
+                console.log('app.put issue deletion after hook');
+                done();
+              }
+            })
+      })
       test('Update one field on an issue',(done)=>{
         chai.request(server)
             .put('/api/issues/apitest')
             .type('form')
             .send({
-              _id:test2Id,
+              _id:putId,
               status_text:'modified by put'
             })
             .end((err,res)=>{
               if(err) console.log(err);
               else {
-                //console.log(res.body);
+                
                 assert.equal(res.body['status_text'],'modified by put');
+                done();
               }
-            }).timeout(20000);
-          done();
+            }).timeout(10000);
+          
       })
 
 
@@ -133,19 +230,20 @@ suite('Functional Tests', function() {
             .put('/api/issues/apitest')
             .type('form')
             .send({
-              _id:test1Id,
+              _id:putId,
               status_text:'modified by put',
               assigned_to:'modified by put'
             })
             .end((err,res)=>{
               if(err) console.log(err);
               else {
-                //console.log(res.body);
+                
                 assert.equal(res.body['status_text'],'modified by put');
                 assert.equal(res.body['assigned_to'],'modified by put');
+                done();
               }
-            }).timeout(20000);
-          done();
+            }).timeout(10000);
+          
       })
 
       test('Update an issue with missing _id',(done)=>{
@@ -160,10 +258,10 @@ suite('Functional Tests', function() {
               else {
                 
                 assert.equal(res.body['error'],'missing _id');
-               
+                done();
               }
             }).timeout(20000);
-          done();
+          
       })
 
       test('Update an issue with no fields to update',(done)=>{
@@ -171,17 +269,17 @@ suite('Functional Tests', function() {
             .put('/api/issues/apitest')
             .type('form')
             .send({
-              _id:test1Id
+              _id:putId
             })
             .end((err,res)=>{
               if(err) console.log(err);
               else {
                 
                 assert.equal(res.body['error'],'no update field(s)');
-               
+                done();
               }
-            }).timeout(20000);
-          done();
+            });
+          
       })
 
 
@@ -198,10 +296,10 @@ suite('Functional Tests', function() {
               else {
                 
                 assert.equal(res.body['error'],'no issue by that id');
-               
+                done();
               }
-            }).timeout(20000);
-          done();
+            });
+          
       })
     })
 
@@ -210,37 +308,48 @@ suite('Functional Tests', function() {
 
 
     suite('app.delete method',()=>{
+      let deleteIssueID;
 
-      test('delete an issue',(done)=>{
-       
-     
-      chai.request(server)
+      before( done=>{
+        chai.request(server)
+            .post('/api/issues/apitest')
+            .type('form')
+            .send({
+              'issue_title':'DeleteIssue',
+              'issue_text':'DeleteIssue',
+              'created_by':'before function',
+              'assigned_to':'delete method',
+              'status_text':'success before func'
+            })
+            .end((err,res)=>{
+              if (err) console.log(err);
+              else deleteIssueID=res.body['_id'];
+              done();
+            }).timeout(10000);
+      });
+
+      test('delete an issue', function (done) {
+
+
+           chai.request(server)
             .delete('/api/issues/apitest')
             .type('form')
             .send({
-              _id:test1Id
+              _id: deleteIssueID
             })
-           .end((err,res)=>{
-             
-             if (err) console.log(err); 
-            //assert.equal(res.body['result'],'success on delete');
+            .end((err, res) => {
 
-            }).timeout(200000);
-      chai.request(server)
-          .delete('/api/issues/apitest')
-          .type('form')
-          .send({
-           _id:test2Id
-           })
-          .end((err,res)=>{
-             if (err) console.log(err);
+              if (err) console.log(err);
              
-             //assert.equal(res.body['result'],'success on delete');
-             
-           }).timeout(200000);
-      
-          done();
-      })
+              assert.equal(res.body['result'], 'success on delete');
+              done();
+            }).timeout(10000);
+          
+
+         
+        })
     })
+
+
   })
-});
+

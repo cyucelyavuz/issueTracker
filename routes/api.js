@@ -112,7 +112,7 @@ module.exports = function (app) {
           newProject.issues.push(issue);
           newProject.save((err,data)=>{
             if(err) res.send('there was an error saving in post');
-            else res.json(issue);
+            else res.json(data.issues.filter(elem=> elem.created_on===issue.created_on));
           })
           
         }
@@ -148,7 +148,7 @@ module.exports = function (app) {
         res.json({error:'missing _id'});
         return;
       }
-      console.log('update issue\n'+req.body);
+      
       if(!issue_title && 
          !issue_text &&
          !created_by &&
@@ -204,7 +204,7 @@ module.exports = function (app) {
               if(err|!data) res.json({error:'could not delete issue'});
 
               else {
-                console.log('deleted issue '+req.body._id);
+                
                 res.json({result:'success on delete'});
               }
             })
