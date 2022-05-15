@@ -177,11 +177,14 @@ module.exports = function (app) {
           issueToUpdate.assigned_to=assigned_to||issueToUpdate.assigned_to;
           issueToUpdate.updated_on= new Date();
           issueToUpdate.open=open;
-          issueToUpdate.status_text=status_text;
+          issueToUpdate.status_text=status_text||issueToUpdate.status_text;
           projData.save((err,data)=>{
             if (err|| !data){
               res.json({error:'could not update issue'})
-            } else res.json(data['issues'].id(_id));
+            }
+            //{  result: 'successfully updated', '_id': _id }
+            else res.json({ result: 'successfully updated', '_id': _id})
+            //res.json(data['issues'].id(_id));
           })
         }
 
