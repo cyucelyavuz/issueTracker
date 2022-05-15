@@ -205,6 +205,7 @@ module.exports = function (app) {
             const issueToDel = data.issues.id(_id);
             console.log(issueToDel);
             if(!issueToDel){
+              console.log('error cause of bad Id');
               res.send({ error: 'could not delete', '_id': _id });
               return;
             }
