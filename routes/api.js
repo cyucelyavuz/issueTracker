@@ -203,7 +203,7 @@ module.exports = function (app) {
           if(err||!data) res.json({ error: 'could not delete', '_id': _id });
           else {
             const issueToDel = data.issues.id(_id);
-            console.log(issueToDel);
+            console.log('issue to del= \n'+issueToDel);
             if(!issueToDel){
               console.log('error cause of bad Id');
               res.send({ error: 'could not delete', '_id': _id });
