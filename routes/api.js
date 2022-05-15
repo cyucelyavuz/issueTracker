@@ -164,11 +164,11 @@ module.exports = function (app) {
            return;
          }
       Project.findOne({name:project},(err,projData)=>{
-        if (err || !projData) res.json({error:'error updating',id:_id});
+        if (err || !projData) res.json({ error: 'could not update', '_id': _id });
         else {
           const issueToUpdate= projData.issues.id(_id);
           if(!issueToUpdate) {
-            res.json({ error: 'no issue by that id'});
+            res.json({ error: 'could not update', '_id': _id });
             return;
           }
           issueToUpdate.issue_title=issue_title||issueToUpdate.issue_title;
@@ -180,7 +180,7 @@ module.exports = function (app) {
           issueToUpdate.status_text=status_text||issueToUpdate.status_text;
           projData.save((err,data)=>{
             if (err|| !data){
-              res.json({error:'could not update issue'})
+              res.json({ error: 'could not update', '_id': _id })
             }
             //{  result: 'successfully updated', '_id': _id }
             else res.json({ result: 'successfully updated', '_id': _id})
@@ -200,7 +200,7 @@ module.exports = function (app) {
       } else{
         //console.log('delete issue\n'+req.body._id);
         Project.findOne({name:project},(err,data)=>{
-          if(err||!data) res.json({error:'error bringing up issue'});
+          if(err||!data) res.json({ error: 'could not delete', '_id': _id });
           else {
             const issueToDel = data.issues.id(_id);
             if(!issueToDel){
