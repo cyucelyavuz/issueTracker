@@ -102,9 +102,9 @@ module.exports = function (app) {
         created_on:new Date(),
         updated_on:new Date(),
         created_by:created_by,
-        assigned_to:assigned_to,
+        assigned_to:assigned_to || '',
         open:true,
-        status_text:status_text
+        status_text:status_text || ''
       });
       Project.findOne({name:project},(err,foundProject)=>{
         if(!foundProject){
