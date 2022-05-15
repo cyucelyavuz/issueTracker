@@ -91,7 +91,7 @@ module.exports = function (app) {
         assigned_to,
         status_text
       }=req.body;
-      console.log('create issue'+ '\n'+ req.body);
+      console.log('create issue'+ '\n'+ req.body+' '+project);
       if(!issue_title||!issue_text||!created_by){
         res.json({error:'required filed(s) missing'});
         return;

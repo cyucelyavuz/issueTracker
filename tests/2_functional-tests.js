@@ -15,6 +15,7 @@ suite('Functional Tests', function() {
 
     suite('ap.post method',()=>{
       let postId;
+     
       afterEach(done=>{
         chai.request(server)
             .delete('/api/issues/apitest')
@@ -93,6 +94,86 @@ suite('Functional Tests', function() {
       })
   })
 
+   suite('ap.post method a diff project',()=>{
+    let postId;
+   
+    afterEach(done=>{
+      chai.request(server)
+          .delete('/api/issues/apitest2')
+          .type('form')
+          .send({
+            _id:postId
+          })
+          .end((err,res)=>{
+            if (err) console.log(err);
+            else console.log('deletion succes post method suite afterEach');
+            done();
+          }).timeout(10000);
+    })
+
+    test('Create an issue with every field', (done)=>{
+
+        chai.request(server)
+          .post('/api/issues/apitest2')
+          .type('form')
+          .send({
+              'issue_title':'PostTest',
+              'issue_text':'PostTest1',
+              'created_by':'Test Suite Test#1',
+              'assigned_to':'Test Suite',
+              'status_text':'success PostTest 1'
+          })
+          .end((err,res)=>{
+              postId=res.body._id;
+              assert.equal(res.body.assigned_to,'Test Suite');
+              assert.equal(res.body.issue_title,'PostTest');
+              done();
+          }).timeout(10000);
+      
+    });
+
+  
+
+    test('Create an issue with only required fields',(done)=>{
+
+        chai.request(server)
+            .post('/api/issues/apitest2')
+            .type('form')
+            .send({
+              'issue_title':'PostTest',
+              'issue_text':'PostTest2-Only Required Fields',
+              'created_by':'Test Suite Test#2'
+            })
+            .end((err,res)=>{
+              postId=res.body._id;
+              assert.equal(res.body.issue_title,'PostTest');
+              assert.equal(res.body.issue_text,'PostTest2-Only Required Fields');
+              assert.equal(res.body.created_by,'Test Suite Test#2');
+              done();
+            }).timeout(10000);
+     
+
+
+    })
+
+  
+
+    test('Create an issue with missing required fields',(done)=>{
+
+      chai.request(server)
+          .post('/api/issues/apitest2')
+          .type('form')
+          .send({
+            'issue_title':'PostTest',
+            'issue_text':'PostTest3-Missing Required Fields'
+          })
+          .end((err,res)=>{
+            assert.equal(res.body.error,'required filed(s) missing');
+            done();
+          }).timeout(10000);
+      
+    })
+})
 
     suite('get issue method',()=> {  
       let postId;
