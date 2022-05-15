@@ -93,7 +93,7 @@ module.exports = function (app) {
       }=req.body;
       console.log('create issue'+ '\n'+ req.body+' '+project);
       if(!issue_title||!issue_text||!created_by){
-        res.json({error:'required filed(s) missing'});
+        res.json({ error: 'required field(s) missing' });
         return;
       }
       const issue = new Issue({
