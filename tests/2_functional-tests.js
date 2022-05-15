@@ -350,6 +350,48 @@ suite('Functional Tests', function() {
 
          
         })
+
+        test('delete an issue with an invalid _id', function (done) {
+
+          const badId=00123;
+          chai.request(server)
+           .delete('/api/issues/apitest')
+           .type('form')
+           .send({
+             _id: badId
+           })
+           .end((err, res) => {
+
+             if (err) console.log(err);
+            
+             assert.equal(res.body.error, 'could not delete');
+             done();
+           }).timeout(10000);
+         
+
+        
+       })
+
+       test('delete an issue with missing _id', function (done) {
+
+
+        chai.request(server)
+         .delete('/api/issues/apitest')
+         .type('form')
+         .send({
+           issue_text:'no id'
+         })
+         .end((err, res) => {
+
+           if (err) console.log(err);
+          
+           assert.equal(res.body.error, 'missing _id');
+           done();
+         }).timeout(10000);
+       
+
+      
+     })
     })
 
 
