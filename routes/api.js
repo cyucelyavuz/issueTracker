@@ -198,11 +198,12 @@ module.exports = function (app) {
         res.json({ error: 'missing _id' });
         return;
       } else{
-        //console.log('delete issue\n'+req.body._id);
+        
         Project.findOne({name:project},(err,data)=>{
           if(err||!data) res.json({ error: 'could not delete', '_id': _id });
           else {
             const issueToDel = data.issues.id(_id);
+            console.log(issueToDel);
             if(!issueToDel){
               res.send({ error: 'could not delete', '_id': _id });
               return;
