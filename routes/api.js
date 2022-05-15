@@ -112,7 +112,12 @@ module.exports = function (app) {
           newProject.issues.push(issue);
           newProject.save((err,data)=>{
             if(err) res.send('there was an error saving in post');
-            else res.json(data.issues.filter(elem=> elem.created_on===issue.created_on));
+           
+            else {
+              const responsObj = data.issues.filter(elem=> elem.created_on===issue.created_on);
+              console.log(responsObj);
+              res.json(responsObj);
+            }
           })
           
         }
