@@ -160,7 +160,7 @@ module.exports = function (app) {
          !assigned_to &&
          !status_text &&
          !open) {
-           res.json({error:'no update field(s)'});
+           res.json({ error: 'no update field(s) sent', '_id': _id });
            return;
          }
       Project.findOne({name:project},(err,projData)=>{
@@ -193,27 +193,28 @@ module.exports = function (app) {
     
     .delete(function (req, res){
       let project = req.params.project;
-      if(!req.body._id) {
-        res.json({error:'no _id'});
+      _id=req.body._id;
+      if(!_id) {
+        res.json({ error: 'missing _id' });
         return;
       } else{
         //console.log('delete issue\n'+req.body._id);
         Project.findOne({name:project},(err,data)=>{
           if(err||!data) res.json({error:'error bringing up issue'});
           else {
-            const issueToDel = data.issues.id(req.body._id);
+            const issueToDel = data.issues.id(_id);
             if(!issueToDel){
-              res.send({error:'could not delete issue'});
+              res.send({ error: 'could not delete', '_id': _id });
               return;
             }
             issueToDel.remove();
 
             data.save((err,data)=>{
-              if(err|!data) res.json({error:'could not delete issue'});
+              if(err|!data) res.json({ error: 'could not delete', '_id': _id });
 
               else {
                 
-                res.json({result:'success on delete'});
+                res.json({ result: 'successfully deleted', '_id': _id });
               }
             })
           }
