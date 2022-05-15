@@ -114,9 +114,9 @@ module.exports = function (app) {
             if(err) res.send('there was an error saving in post');
            
             else {
-              const responsObj = data.issues.filter(elem=> elem.created_on===issue.created_on);
-              console.log(responsObj);
-              res.json(responsObj);
+              //const responsObj = data.issues.filter(elem=> elem.created_on===issue.created_on);
+              //console.log(responsObj);
+              res.json(data);
             }
           })
           
